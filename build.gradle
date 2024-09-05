@@ -26,9 +26,10 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Añade esta dependencia para manejar sesiones:
+    implementation 'org.springframework.session:spring-session-core'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
