@@ -78,4 +78,4 @@ This Spring Boot application provides a foundation for building a code synthesis
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.
+~~Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.~~
