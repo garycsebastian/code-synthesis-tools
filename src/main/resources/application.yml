@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: code-synthesis-tool
+  data:
+    mongodb:
+      uri: mongodb+srv://encora:hdvM4jJEuQPppetW@misti.ymgru.mongodb.net/test?retryWrites=true&w=majority&appName=misti
+
+
+okta:
+  oauth2:
+    # Replace with the domain of your Auth0 tenant.
+    issuer: https://dev-3qpos43nb7ss8da4.us.auth0.com/
+    # Replace with the API Identifier for your Auth0 API.
+    audience: https://dev-3qpos43nb7ss8da4.us.auth0.com/api/v2/
