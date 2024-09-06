@@ -7,4 +7,13 @@ spring:
 
 logging:
   level:
-    root: debug
+    root: DEBUG
+    org:
+      mongodb:
+        driver: INFO
+    sun:
+      rmi: ERROR
+    javax:
+      management:
+        remote:
+          rmi: ERROR
