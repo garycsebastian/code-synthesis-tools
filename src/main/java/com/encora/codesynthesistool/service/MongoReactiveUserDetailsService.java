@@ -5,6 +5,8 @@ import com.encora.codesynthesistool.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
@@ -12,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -61,7 +64,11 @@ public class MongoReactiveUserDetailsService implements ReactiveUserDetailsServi
                     u.setPassword(passwordEncoder.encode(u.getPassword()));
                     return u;
                 })
-                .flatMap(userRepository::save);
+                .flatMap(u -> userRepository.save(u)
+                        .onErrorMap(DuplicateKeyException.class,
+                                ex -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exists"))) // Error handling moved here
+                ;
+
     }
 
     public Mono<User> updateUser(String username, User updatedUser) {
@@ -81,6 +88,7 @@ public class MongoReactiveUserDetailsService implements ReactiveUserDetailsServi
     public Mono<Void> deleteUser(String username) {
         return userRepository.findByUsername(username)
                 .flatMap(userRepository::delete)
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found: " + username)));
+                .onErrorResume(UsernameNotFoundException.class,
+                        ex -> Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage())));
     }
 }

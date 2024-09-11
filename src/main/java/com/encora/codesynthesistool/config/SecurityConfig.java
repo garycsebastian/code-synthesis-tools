@@ -2,6 +2,7 @@ package com.encora.codesynthesistool.config;
 
 import com.encora.codesynthesistool.filter.JwtAuthenticationFilter;
 import com.encora.codesynthesistool.repository.UserRepository;
+import com.encora.codesynthesistool.service.JwtBlacklistService;
 import com.encora.codesynthesistool.service.JwtService;
 import com.encora.codesynthesistool.service.MongoReactiveUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -31,12 +32,12 @@ public class SecurityConfig {
         return ServerWebExchangeMatchers.pathMatchers(
                 "/api/public/**",
                 "/api/auth/login", // Authentication endpoint
-                "/api/users/register" // Registration endpoint
+                "/api/auth/signup" // Registration endpoint
         );
     }
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, JwtService jwtService) {
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, JwtService jwtService, JwtBlacklistService jwtBlacklistService) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF for APIs
                 .cors(ServerHttpSecurity.CorsSpec::disable) // Configura o permite CORS aquí
@@ -45,7 +46,8 @@ public class SecurityConfig {
                         .matchers(publicEndpoints()).permitAll()
                         .anyExchange().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(jwtService, securityContextRepository()), SecurityWebFiltersOrder.AUTHENTICATION)
+                // Add filter AFTER authentication processing:
+                .addFilterAfter(jwtAuthenticationFilter(jwtService, securityContextRepository(), jwtBlacklistService), SecurityWebFiltersOrder.AUTHENTICATION)
                 // ... otras configuraciones ...
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable) // Desactiva form login y usa endpoints API
                 .build();
@@ -57,8 +59,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService, ServerSecurityContextRepository securityContextRepository) {
-        return new JwtAuthenticationFilter(jwtService, securityContextRepository);
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService, ServerSecurityContextRepository securityContextRepository, JwtBlacklistService jwtBlacklistService) {
+        return new JwtAuthenticationFilter(jwtService, securityContextRepository, jwtBlacklistService);
     }
 
     @Bean
