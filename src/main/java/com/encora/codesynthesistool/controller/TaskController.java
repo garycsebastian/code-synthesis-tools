@@ -4,8 +4,16 @@ import com.encora.codesynthesistool.model.Task;
 import com.encora.codesynthesistool.service.TaskService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,8 +31,7 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public Mono<Task> getTaskById(@PathVariable String id) {
-        return taskService.findById(id)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"))));
+        return taskService.findById(id);
     }
 
     @PostMapping
@@ -36,7 +43,7 @@ public class TaskController {
     @PutMapping("/{id}")
     public Mono<Task> updateTask(@PathVariable String id, @RequestBody Task task) {
         task.setId(id); // Ensure the ID is set
-        return taskService.save(task);
+        return taskService.update(id, task);
     }
 
     @DeleteMapping("/{id}")

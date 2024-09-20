@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Task {
     @Id
     private String id;
+    private String userId; // Add userId to track the task owner
     private String description;
     private boolean completed;
 }

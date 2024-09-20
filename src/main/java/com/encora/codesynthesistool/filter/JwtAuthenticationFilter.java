@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             return jwtService.validateToken(token)
                     .flatMap(userDetails -> {
                         // Create Authentication and SecurityContext
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities());
+                        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         SecurityContext securityContext = new SecurityContextImpl(authentication);
 
                         // Save SecurityContext and continue
