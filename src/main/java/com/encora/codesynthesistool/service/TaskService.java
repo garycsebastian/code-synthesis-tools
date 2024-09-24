@@ -1,13 +1,20 @@
 package com.encora.codesynthesistool.service;
 
 import com.encora.codesynthesistool.model.Task;
+import com.encora.codesynthesistool.model.TaskStatus;
+import java.time.LocalDate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface TaskService {
-    Flux<Task> getAllTask();
+    Flux<Task> getAllTask(
+            String status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            String sortBy,
+            String sortDirection);
 
-    Flux<Task> getCompletedTask(Boolean completed);
+    Flux<Task> getTaskByStatus(TaskStatus status);
 
     Mono<Task> findById(String id);
 

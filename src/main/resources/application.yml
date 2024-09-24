@@ -9,6 +9,10 @@ logging:
   level:
     root: DEBUG
     org:
+      springframework:
+        web:
+          reactive: DEBUG
+        security: DEBUG
       mongodb:
         driver: INFO
     sun:
@@ -17,3 +21,15 @@ logging:
       management:
         remote:
           rmi: ERROR
+
+# Specify the path of the OpenAPI documentation
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  # Specify the path of the Swagger UI
+  swagger-ui:
+    path: /swagger-ui.html
+
+  # Enable or disable Swagger UI
+    enabled: true

@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -43,24 +44,37 @@ public class JwtAuthenticationFilter implements WebFilter {
                 return exchange.getResponse().setComplete();
             }
 
-            return jwtService.validateToken(token)
-                    .flatMap(userDetails -> {
-                        // Create Authentication and SecurityContext
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                        SecurityContext securityContext = new SecurityContextImpl(authentication);
+            return jwtService
+                    .validateToken(token)
+                    .flatMap(
+                            userDetails -> {
+                                // Create Authentication and SecurityContext
+                                Authentication authentication =
+                                        new UsernamePasswordAuthenticationToken(
+                                                userDetails, null, userDetails.getAuthorities());
+                                SecurityContext securityContext =
+                                        new SecurityContextImpl(authentication);
 
-                        // Save SecurityContext and continue
-                        return securityContextRepository.save(exchange, securityContext)
-                                .then(chain.filter(exchange));
-                    })
-                    .onErrorResume(error -> {
-                        // Handle authentication errors (e.g., invalid token)
-                        log.error("Error validating token: {}", error.getMessage());
-                        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                        return exchange.getResponse().setComplete();
-                    });
+                                // Save SecurityContext and continue
+                                return securityContextRepository
+                                        .save(exchange, securityContext)
+                                        .thenEmpty(chain.filter(exchange));
+                            })
+                    .onErrorResume(
+                            error -> {
+                                // Handle other validation errors (propagate the error)
+                                log.error("Error validating token: {}", error.getMessage(), error);
+                                if (!(error instanceof ResponseStatusException)) {
+                                    return Mono.error(
+                                            new ResponseStatusException(
+                                                    HttpStatus.UNAUTHORIZED,
+                                                    "Authentication failed"));
+                                }
+                                return Mono.error(error); // Propagate the error
+                            });
         } else {
             // No token, continue to the next filter (SecurityConfig will handle authorization)
+            log.warn("No token found in Authorization header");
             return chain.filter(exchange);
         }
     }

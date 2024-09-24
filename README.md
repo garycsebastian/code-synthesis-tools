@@ -1,22 +1,35 @@
 # Code Synthesis Tool (Encora)
 
-This Spring Boot application provides a foundation for building a code synthesis tool, featuring secure API endpoints protected with OAuth2 using Auth0.
+This Spring Boot application provides a foundation for a code synthesis tool, featuring a secure API built with Spring WebFlux and Spring Data MongoDB Reactive.
 
 ## Features
 
-- **Secure API Endpoints:**
-    - `/api/public/**`: Publicly accessible endpoints.
-    - `/api/tasks/**`: Protected endpoints requiring authentication via Auth0.
-- **OAuth2 Resource Server:** Secures the application using Auth0 as the authorization server.
-- **JWT Authentication:** Validates JSON Web Tokens (JWTs) issued by Auth0.
-- **Spring WebFlux:** Built using Spring's reactive web framework for non-blocking, asynchronous operations.
-- **Spring Data MongoDB Reactive:**  Interacts with MongoDB using reactive programming for efficient data handling.
+- **User Authentication and Authorization:**
+   - Secure user registration (`/api/auth/signup`).
+   - JWT-based authentication (`/api/auth/login`).
+   - Secure logout with JWT blacklisting (`/api/auth/logout`).
+- **Task Management:**
+   - Create, read, update, and delete tasks (CRUD operations).
+   - Filter tasks by status and due date range.
+   - Sort tasks by various fields.
+- **Security:**
+   - Protection against common web vulnerabilities (XSS, CSRF).
+   - Input validation and sanitization.
+   - JWT authentication and authorization.
+   - Password hashing.
+- **Technology Stack:**
+   - Spring Boot
+   - Spring WebFlux (Reactive Programming Model)
+   - Spring Data MongoDB Reactive
+   - Spring Security
+   - Java 17
+   - Lombok (for reduced boilerplate code)
+   - JSON Web Tokens (JWT)
 
 ## Prerequisites
 
-- **Java 17:** Ensure you have Java 17 installed.
+- **Java 17:** Ensure you have Java 17 or later installed.
 - **Gradle 8.4 (or compatible):** Used for building and running the application.
-- **Auth0 Account:** You'll need an Auth0 account to configure OAuth2 and obtain necessary credentials.
 - **MongoDB:** You'll need a running MongoDB instance for data persistence.
 
 ## Getting Started
@@ -27,55 +40,39 @@ This Spring Boot application provides a foundation for building a code synthesis
    cd code-synthesis-tool
    ```
 
-2. **Auth0 Configuration:**
-    - **Create an Auth0 API:** In your Auth0 dashboard, create a new API for your application.
-    - **Set Audience:** Set the "Identifier" value in your Auth0 API settings to match the `okta.oauth2.audience` value in your `application.yml` file.
-    - **Define Scopes:** Define the necessary scopes for your API endpoints (e.g., `read:tasks`, `write:tasks`) in your Auth0 API settings.
+2. **Configuration (`application.yml`):**
+   - **MongoDB Settings:**
+     ```yaml
+     spring:
+       data:
+         mongodb:
+           uri: mongodb://your-mongodb-host:your-mongodb-port/your-database-name
+     ```
+      - Replace placeholders with your actual MongoDB connection details.
+   - **JWT Secret:**
+     ```yaml
+     jwt:
+       secret: your-jwt-secret-key
+     ```
+      - Set a strong, secret key for JWT signing.
 
-3. **Application Configuration (`application.yml`):**
-    - **Auth0 Settings:**
-      ```yaml
-      okta:
-        oauth2:
-          issuer: https://YOUR_AUTH0_DOMAIN/ 
-          audience: https://YOUR_AUTH0_DOMAIN/api/v2/ 
-      ```
-        - Replace `YOUR_AUTH0_DOMAIN` with your actual Auth0 domain.
-    - **MongoDB Settings:**
-      ```yaml
-      spring:
-        data:
-          mongodb:
-            uri: mongodb+srv://your-mongodb-connection-string
-      ```
-        - Replace `your-mongodb-connection-string` with your MongoDB connection string.
-
-4. **Build and Run:**
+3. **Build and Run:**
    ```bash
    ./gradlew build && ./gradlew bootRun
    ```
 
-## Testing
+## API Documentation
 
-1. **Obtain an Access Token:** Use a tool like Postman to obtain an access token from your Auth0 authentication server. You'll need to provide your Auth0 client credentials and the appropriate scopes.
+The API documentation will be available after running the application. You can access it typically at:
 
-2. **Make API Requests:**
-    - **Public Endpoint:**
-      ```bash
-      curl http://localhost:8080/api/public
-      ```
-    - **Protected Endpoint (Requires Authentication):**
-      ```bash
-      curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" http://localhost:8080/api/tasks
-      ```
-        - Replace `YOUR_ACCESS_TOKEN` with the access token you obtained from Auth0.
+- Swagger UI:  `http://localhost:8080/swagger-ui.html`
 
-## Important Security Considerations
+## Important Considerations
 
-- **CSRF Protection:** The current configuration disables CSRF protection for simplicity. **Do not disable CSRF protection in a production environment!** Implement proper CSRF protection mechanisms.
-- **CORS Configuration:**  Consider configuring CORS securely for your specific use case in a production environment.
-- **Error Handling:** Implement robust error handling for authentication and authorization failures to provide meaningful responses to clients.
+- **Error Handling:** The application includes basic error handling. Consider adding more robust error handling and logging for production environments.
+- **Testing:**  Write unit and integration tests to ensure the application's functionality and security.
+- **Deployment:**  Configure your application for deployment to your chosen environment (e.g., Docker, cloud platform).
 
 ## Contributing
 
-~~Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.~~
+Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.

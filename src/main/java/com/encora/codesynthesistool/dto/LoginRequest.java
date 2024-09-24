@@ -1,6 +1,5 @@
 package com.encora.codesynthesistool.dto;
 
-
 import lombok.Data;
 
 @Data

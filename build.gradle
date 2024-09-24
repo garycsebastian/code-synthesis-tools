@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.3'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.diffplug.spotless' version '6.12.0' // Or latest version
 }
 
 group = 'com.encora'
@@ -29,6 +30,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-api:2.6.0'
+
+    implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.9.0'
 
     // Dependencia para JWT (Autenticación basada en tokens)
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -47,4 +55,16 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.15.0').aosp() // Use a specific version of Google Java Forma
+        importOrder() // Ordena los imports
+        removeUnusedImports() // Remove unused imports
+        trimTrailingWhitespace() // Trim trailing whitespace
+        endWithNewline() // Ensure files end with a newline
+//        indentWithSpaces(4) // Use 4 spaces for indentation
+//        indentWithTabs(2)
+    }
 }

@@ -1,7 +1,6 @@
 package com.encora.codesynthesistool.util;
 
 import com.encora.codesynthesistool.model.User;
-
 import java.util.List;
 
 public class TestUtils {
