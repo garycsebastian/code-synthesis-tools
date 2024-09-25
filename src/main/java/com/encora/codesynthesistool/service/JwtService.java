@@ -1,5 +1,8 @@
 package com.encora.codesynthesistool.service;
 
+import com.encora.codesynthesistool.dto.LoginResponse;
+import com.encora.codesynthesistool.model.RefreshToken;
+import com.encora.codesynthesistool.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -8,9 +11,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import java.time.LocalDateTime;
 import java.util.Date;
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,23 +26,89 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 @Service
 public class JwtService {
 
     private final byte[] SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512).getEncoded();
-    private final long EXPIRATION_TIME = 3600000; // 1 hora en milisegundos
+
+    @Value("${jwt.token-expiration-time}")
+    private long tokenExpirationTime;
+
+    @Value("${jwt.refresh-expiration-time}")
+    private long refreshExpirationTime;
 
     private final ReactiveUserDetailsService userDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
 
-    public String generateToken(UserDetails userDetails) {
+    public Mono<LoginResponse> generateTokens(UserDetails userDetails) {
+        String accessToken = generateAccessToken(userDetails);
+        return generateRefreshToken(userDetails.getUsername())
+                .map(refreshToken -> new LoginResponse(accessToken, refreshToken.getToken()));
+    }
+
+    private String generateAccessToken(UserDetails userDetails) {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime))
                 .signWith(Keys.hmacShaKeyFor(SECRET_KEY), SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    private Mono<RefreshToken> generateRefreshToken(String username) {
+        RefreshToken refreshToken =
+                RefreshToken.builder()
+                        .token(UUID.randomUUID().toString())
+                        .username(username)
+                        .expiryDate(LocalDateTime.now().plusSeconds(refreshExpirationTime / 1000))
+                        .build();
+        return refreshTokenRepository.save(refreshToken);
+    }
+
+    public Mono<LoginResponse> refreshAccessToken(String refreshToken) {
+        return refreshTokenRepository
+                .findByToken(refreshToken)
+                .flatMap(this::verifyExpiration)
+                .flatMap(token -> userDetailsService.findByUsername(token.getUsername()))
+                .flatMap(
+                        userDetails -> {
+                            String newAccessToken = generateAccessToken(userDetails);
+                            return generateRefreshToken(userDetails.getUsername())
+                                    .flatMap(
+                                            newRefreshToken ->
+                                                    refreshTokenService
+                                                            .deleteByToken(refreshToken)
+                                                            .thenReturn(
+                                                                    new LoginResponse(
+                                                                            newAccessToken,
+                                                                            newRefreshToken
+                                                                                    .getToken())));
+                        })
+                .switchIfEmpty(
+                        Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.UNAUTHORIZED, "Invalid refresh token")));
+    }
+
+    private Mono<RefreshToken> verifyExpiration(RefreshToken token) {
+        return Mono.just(token)
+                .filter(t -> t.getExpiryDate().isAfter(LocalDateTime.now()))
+                .switchIfEmpty(
+                        refreshTokenService
+                                .delete(token) // Delete if expired
+                                .then(
+                                        Mono.error(
+                                                new RuntimeException(
+                                                        "Refresh token was expired. Please make a"
+                                                                + " new signin request"))));
+    }
+
+    public Mono<Void> invalidateRefreshTokenByUsername(String username) {
+        log.info("Invalidating refresh token for user: {}", username);
+        return refreshTokenService.deleteByUsername(username);
     }
 
     public Mono<Authentication> getAuthentication(String token) {

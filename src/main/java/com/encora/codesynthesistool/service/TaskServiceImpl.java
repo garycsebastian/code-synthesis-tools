@@ -71,15 +71,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Flux<Task> getTaskByStatus(TaskStatus status) {
-        return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
-                .map(Authentication::getPrincipal)
-                .cast(User.class) // Assuming your UserDetails implements User
-                .flatMapMany(user -> taskRepository.findByUserIdAndStatus(user.getId(), status));
-    }
-
-    @Override
     public Mono<Task> findById(String id) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)

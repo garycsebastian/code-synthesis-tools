@@ -17,13 +17,11 @@ public class Task {
     @Id private String id;
     private String userId; // Add userId to track the task owner
 
-    @NotNull(message = "Title is required")
-    private String title;
+    @NotNull(message = "Title is required") private String title;
 
     private String description;
 
-    @NotNull(message = "Due date is required")
-    @JsonFormat(pattern = "yyyy-MM-dd") // Specify the desired date format
+    @NotNull(message = "Due date is required") @JsonFormat(pattern = "yyyy-MM-dd") // Specify the desired date format
     private LocalDate dueDate;
 
     private TaskStatus status; // Use the enum instead of boolean

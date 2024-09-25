@@ -1,11 +1,14 @@
 package com.encora.codesynthesistool.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -17,8 +20,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 @Document(collection = "users")
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true) // Tell Jackson to ignore unknown properties
 public class User implements UserDetails {
     @Id private String id;
 
@@ -32,6 +37,7 @@ public class User implements UserDetails {
     @JsonFormat(pattern = "yyyy-MM-dd") // Specify the desired date format
     private LocalDate registrationDate; // Add the registrationDate field
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getRoles() == null || getRoles().isEmpty()

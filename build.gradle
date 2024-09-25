@@ -59,12 +59,16 @@ tasks.named('test') {
 
 spotless {
     java {
-        googleJavaFormat('1.15.0').aosp() // Use a specific version of Google Java Forma
-        importOrder() // Ordena los imports
-        removeUnusedImports() // Remove unused imports
-        trimTrailingWhitespace() // Trim trailing whitespace
-        endWithNewline() // Ensure files end with a newline
-//        indentWithSpaces(4) // Use 4 spaces for indentation
-//        indentWithTabs(2)
+        googleJavaFormat('1.15.0').aosp().reflowLongStrings()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        indentWithSpaces(4)
+        formatAnnotations()
+        custom 'no-wildcard-imports', { it.replaceAll('import java\\.util\\.\\*;', '') }
+        bumpThisNumberIfACustomStepChanges(1)
+        toggleOffOn()
+        lineEndings 'UNIX'
     }
 }

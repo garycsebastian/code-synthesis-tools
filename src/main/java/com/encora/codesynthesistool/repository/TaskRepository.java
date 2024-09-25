@@ -14,8 +14,6 @@ public interface TaskRepository extends ReactiveMongoRepository<Task, String> {
 
     Mono<Task> findByUserIdAndId(String userId, String id);
 
-    Flux<Task> findByUserIdAndStatus(String userId, TaskStatus status);
-
     // Filtering and Sorting by status and dueDate
     Flux<Task> findByUserIdAndStatusAndDueDateBetween(
             String userId, TaskStatus status, LocalDate fromDate, LocalDate toDate, Sort sort);

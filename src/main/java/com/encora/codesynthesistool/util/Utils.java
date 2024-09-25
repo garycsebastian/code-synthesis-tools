@@ -57,9 +57,12 @@ public class Utils {
      * @return The JWT token string, or null if not found.
      */
     public static String extractJwtFromRequest(ServerHttpRequest request) {
-        String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        String authorization = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            return authorization.substring(7);
+        }
+        if (authorization != null && authorization.startsWith("RefreshToken ")) {
+            return authorization.substring(13);
         }
         return null;
     }

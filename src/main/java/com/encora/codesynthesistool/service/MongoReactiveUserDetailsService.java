@@ -72,7 +72,11 @@ public class MongoReactiveUserDetailsService implements ReactiveUserDetailsServi
                                                 ex ->
                                                         new ResponseStatusException(
                                                                 HttpStatus.BAD_REQUEST,
-                                                                "Username already exists"))) // Error handling moved here
+                                                                "Username"
+                                                                        + " already"
+                                                                        + " exists"))) // Error
+        // handling
+        // moved here
         ;
     }
 

@@ -29,8 +29,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     private final JwtBlacklistService jwtBlacklistService;
 
     @Override
-    @NonNull
-    public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
+    @NonNull public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         // Extract token from Authorization header (if present)
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 

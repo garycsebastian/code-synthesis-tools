@@ -5,6 +5,11 @@ spring:
     mongodb:
       uri: mongodb+srv://encora:hdvM4jJEuQPppetW@misti.ymgru.mongodb.net/test?retryWrites=true&w=majority&appName=misti
 
+jwt:
+  token-expiration-time: 3600000
+  refresh-expiration-time: 7200000
+
+
 logging:
   level:
     root: DEBUG

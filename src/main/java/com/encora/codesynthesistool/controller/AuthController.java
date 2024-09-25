@@ -3,6 +3,7 @@ package com.encora.codesynthesistool.controller;
 import static com.encora.codesynthesistool.util.Utils.extractJwtFromRequest;
 
 import com.encora.codesynthesistool.dto.LoginRequest;
+import com.encora.codesynthesistool.dto.LoginResponse;
 import com.encora.codesynthesistool.model.User;
 import com.encora.codesynthesistool.service.JwtBlacklistService;
 import com.encora.codesynthesistool.service.JwtService;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import java.util.Objects;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,15 +82,19 @@ public class AuthController {
                         content = {
                             @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = User.class))
+                                    schema = @Schema(implementation = LoginResponse.class))
                         }),
                 @ApiResponse(
                         responseCode = "400",
-                        description = "Bad request, such as invalid user data",
+                        description = "Bad request, such as invalid username or password.",
+                        content = @Content),
+                @ApiResponse(
+                        responseCode = "429",
+                        description = "Rate limit exceeded. Try again later.",
                         content = @Content)
             })
     @PostMapping("/login")
-    public Mono<String> login(@RequestBody LoginRequest loginRequest) {
+    public Mono<ResponseEntity<LoginResponse>> login(@RequestBody LoginRequest loginRequest) {
         return Mono.just(loginRequest)
                 .map(login -> bucketSupplier.get().tryConsumeAndReturnRemaining(1))
                 .flatMap(
@@ -101,7 +107,8 @@ public class AuthController {
                                                         passwordEncoder.matches(
                                                                 loginRequest.getPassword(),
                                                                 userDetails.getPassword()))
-                                        .map(jwtService::generateToken)
+                                        .flatMap(jwtService::generateTokens)
+                                        .map(ResponseEntity::ok)
                                         .switchIfEmpty(
                                                 Mono.error(
                                                         new RuntimeException(
@@ -115,6 +122,32 @@ public class AuthController {
                                                         + " seconds."));
                             }
                         });
+    }
+
+    @Operation(
+            summary = "Refresh access token",
+            description = "Generates a new access token using a valid refresh token.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Access token refreshed successfully.",
+                        content = {
+                            @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = LoginResponse.class))
+                        }),
+                @ApiResponse(
+                        responseCode = "401",
+                        description = "Invalid or missing refresh token.",
+                        content = @Content)
+            })
+    @PostMapping("/refreshtoken")
+    public Mono<ResponseEntity<LoginResponse>> refreshToken(ServerWebExchange exchange) {
+        return Mono.just(Objects.requireNonNull(extractJwtFromRequest(exchange.getRequest())))
+                .flatMap(jwtService::refreshAccessToken)
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.error(new RuntimeException("Refresh token is missing")));
     }
 
     @Operation(summary = "Logout user", description = "Logs out the current user.")
@@ -135,7 +168,18 @@ public class AuthController {
                             if (token != null && !jwtBlacklistService.isTokenBlacklisted(token)) {
                                 log.info("Token blacklisted: {}", token);
                                 jwtBlacklistService.blacklistToken(token);
-                                securityContext.setAuthentication(null);
+                                String username = jwtService.extractUsername(token);
+                                return jwtService
+                                        .invalidateRefreshTokenByUsername(username)
+                                        .then(Mono.empty()) // Subscribe to the deletion and
+                                        // continue
+                                        .doOnSuccess(
+                                                v -> {
+                                                    securityContext.setAuthentication(null);
+                                                    log.info(
+                                                            "Logout successful for user: {}",
+                                                            username);
+                                                });
                             }
                             return Mono.empty(); // Return Mono.empty() here
                         })

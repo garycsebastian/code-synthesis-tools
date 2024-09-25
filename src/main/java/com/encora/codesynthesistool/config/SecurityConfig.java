@@ -38,11 +38,11 @@ public class SecurityConfig {
         return ServerWebExchangeMatchers.pathMatchers(
                 "/api/public/**",
                 "/api/auth/login", // Authentication endpoint
+                "/api/auth/refreshtoken", // Authentication endpoint
                 "/api/auth/signup", // Registration endpoint
                 "/swagger-ui.html",
                 "/swagger-ui/**",
-                "/v3/api-docs/**" // Añade esta línea
-                );
+                "/v3/api-docs/**");
     }
 
     @Bean
@@ -68,7 +68,8 @@ public class SecurityConfig {
                                         .contentSecurityPolicy(
                                                 csp ->
                                                         csp.policyDirectives(
-                                                                "default-src 'self'; frame-ancestors 'none';")))
+                                                                "default-src 'self';"
+                                                                    + " frame-ancestors 'none';")))
                 .securityContextRepository(
                         new WebSessionServerSecurityContextRepository()) // Use session-based
                 // repository
@@ -106,7 +107,6 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(
                 Arrays.asList("Authorization", "Content-Type", "X-XSRF-TOKEN", "XSRF-TOKEN"));
         configuration.setMaxAge(3600L);
-        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
