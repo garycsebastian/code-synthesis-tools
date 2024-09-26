@@ -69,6 +69,7 @@ public class JwtService {
     }
 
     public Mono<LoginResponse> refreshAccessToken(String refreshToken) {
+        log.info("Refreshing access token for refresh token: {}", refreshToken);
         return refreshTokenRepository
                 .findByToken(refreshToken)
                 .flatMap(this::verifyExpiration)
@@ -101,9 +102,8 @@ public class JwtService {
                                 .delete(token) // Delete if expired
                                 .then(
                                         Mono.error(
-                                                new RuntimeException(
-                                                        "Refresh token was expired. Please make a"
-                                                                + " new signin request"))));
+                                            new ResponseStatusException(
+                                                HttpStatus.UNAUTHORIZED, "Refresh token was expired. Please make a new signin request"))));
     }
 
     public Mono<Void> invalidateRefreshTokenByUsername(String username) {

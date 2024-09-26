@@ -1,30 +1,34 @@
-# Code Synthesis Tool (Encora)
+# Code Synthesis Tool (Encora) - Backend
 
-This Spring Boot application provides a foundation for a code synthesis tool, featuring a secure API built with Spring WebFlux and Spring Data MongoDB Reactive.
+This Spring Boot application provides a robust and secure backend API for the Code Synthesis Tool, built using Spring WebFlux, Spring Data MongoDB Reactive, and Spring Security.
+All generated with IA.
 
 ## Features
 
 - **User Authentication and Authorization:**
-   - Secure user registration (`/api/auth/signup`).
-   - JWT-based authentication (`/api/auth/login`).
-   - Secure logout with JWT blacklisting (`/api/auth/logout`).
+    - Secure user registration (`/api/auth/signup`).
+    - JWT-based authentication with refresh tokens (`/api/auth/login`, `/api/auth/refreshtoken`).
+    - Secure logout with JWT blacklisting (`/api/auth/logout`).
 - **Task Management:**
-   - Create, read, update, and delete tasks (CRUD operations).
-   - Filter tasks by status and due date range.
-   - Sort tasks by various fields.
+    - Create, read, update, and delete tasks (CRUD operations).
+    - Filter tasks by status and due date range.
+    - Sort tasks by various fields.
 - **Security:**
-   - Protection against common web vulnerabilities (XSS, CSRF).
-   - Input validation and sanitization.
-   - JWT authentication and authorization.
-   - Password hashing.
+    - Protection against common web vulnerabilities (XSS, CSRF).
+    - Input validation and sanitization.
+    - JWT authentication and authorization with token blacklisting.
+    - Password hashing using BCrypt.
+    - Rate limiting on authentication endpoints to prevent brute-force attacks.
 - **Technology Stack:**
-   - Spring Boot
-   - Spring WebFlux (Reactive Programming Model)
-   - Spring Data MongoDB Reactive
-   - Spring Security
-   - Java 17
-   - Lombok (for reduced boilerplate code)
-   - JSON Web Tokens (JWT)
+    - Spring Boot
+    - Spring WebFlux (Reactive Programming Model)
+    - Spring Data MongoDB Reactive
+    - Spring Security
+    - Java 17
+    - Lombok (for reduced boilerplate code)
+    - JSON Web Tokens (JWT)
+    - Bucket4j (for rate limiting)
+    - Swagger (for API documentation)
 
 ## Prerequisites
 
@@ -41,20 +45,28 @@ This Spring Boot application provides a foundation for a code synthesis tool, fe
    ```
 
 2. **Configuration (`application.yml`):**
-   - **MongoDB Settings:**
-     ```yaml
-     spring:
-       data:
-         mongodb:
-           uri: mongodb://your-mongodb-host:your-mongodb-port/your-database-name
-     ```
-      - Replace placeholders with your actual MongoDB connection details.
-   - **JWT Secret:**
-     ```yaml
-     jwt:
-       secret: your-jwt-secret-key
-     ```
-      - Set a strong, secret key for JWT signing.
+    - **MongoDB Settings:**
+      ```yaml
+      spring:
+        data:
+          mongodb:
+            uri: mongodb://your-mongodb-host:your-mongodb-port/your-database-name
+      ```
+        - Replace placeholders with your actual MongoDB connection details.
+    - **JWT Secret:**
+      ```yaml
+      jwt:
+        secret: your-jwt-secret-key
+        token-expiration-time: 86400000 # Access token expiration time in milliseconds (e.g., 1 day)
+        refresh-expiration-time: 604800000 # Refresh token expiration time in milliseconds (e.g., 7 days)
+      ```
+        - Set a strong, secret key for JWT signing.
+        - Configure token expiration times as needed.
+    - **Rate Limiting:**
+      ```yaml
+      rate-limiting:
+        # Configure rate limiting properties here if needed
+      ```
 
 3. **Build and Run:**
    ```bash
